@@ -1,6 +1,6 @@
 from database.DB_connect import get_connection
 from model.strumento import Strumento
-from model.prestito import Prestito
+
 
 '''
     MODELLO:
@@ -35,7 +35,36 @@ class DepositoStrumenti:
             Funzione che legge tutti gli strumenti nel database
             :return: una lista con tutti gli strumenti presenti oppure None
         """
-        # TODO
+        cnx = get_connection()
+        if cnx is None:
+            return None
+
+        strumenti = []
+        try:
+            cursor = cnx.cursor(dictionary=True)
+            cursor.execute("SELECT * FROM strumento")
+
+            for riga in cursor:
+                strumenti.append(Strumento(
+                    codice = riga['codice'],
+                    tipo = riga['tipo'],
+                    marca = riga['marca'],
+                    anno_acquisto = riga['anno_acquisto'],
+                    valore = riga['valore'],
+                    disponibile = bool(riga['disponibile'])))
+
+            cursor.close()
+            cnx.close()
+            return strumenti
+
+        except Exception as e:
+            print(f"Errore durante l'accesso al database: {e}")
+
+            if cnx:
+                cnx.close()
+                return None
+
+
 
     def cerca_strumenti_per_tipo(self, tipo) -> list[Strumento] | None:
         """
@@ -43,4 +72,38 @@ class DepositoStrumenti:
             :param tipo: il tipo dello strumento (es. "Chitarra")
             :return: una lista con tutti gli strumenti del tipo indicato oppure None
         """
-        # TODO
+        cnx = get_connection()
+        if cnx is None:
+            return None
+
+        lista_strumenti_cercati = []
+
+        try:
+            cursor = cnx.cursor(dictionary=True)
+            query = ("SELECT * "
+                     "FROM strumento "
+                     "WHERE tipo = %s")
+            cursor.execute(query, (tipo,))
+
+            for riga in cursor:
+                lista_strumenti_cercati.append(Strumento(
+                    codice = riga['codice'],
+                    tipo = riga['tipo'],
+                    marca = riga['marca'],
+                    anno_acquisto = riga['anno_acquisto'],
+                    valore = riga['valore'],
+                    disponibile = bool(riga['disponibile'])))
+
+            cursor.close()
+            cnx.close()
+            return lista_strumenti_cercati
+
+        except Exception as e:
+            print(f"Errore durante l'accesso al database: {e}")
+            if cnx:
+                cnx.close()
+            return None
+
+
+
+
